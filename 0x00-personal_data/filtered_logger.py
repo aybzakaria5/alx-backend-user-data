@@ -54,7 +54,7 @@ def get_logger() -> logging.Logger:
 PII_FIELDS = ('name', 'email', 'phone', 'address', 'credit_card_number')
 
 
-def get_db():
+def get_db() -> mysql.connector.connection.MySQLConnection:
     """Return a connector to the database
     (mysql.connector.connection.MySQLConnection object).
     """
