@@ -70,3 +70,26 @@ def get_db() -> mysql.connector.connection.MySQLConnection:
         database=database
     )
     return db
+
+def main():
+    """Retrieve all rows in the users table and display each row under a filtered format."""
+    logger = logging.getLogger('user_data')
+    logger.setLevel(logging.INFO)
+    logger.propagate = False
+
+    formatter = RedactingFormatter(fields=PII_FIELDS)
+    stream_handler = StreamHandler()
+    stream_handler.setFormatter(formatter)
+    logger.addHandler(stream_handler)
+
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM users")
+    for row in cursor:
+        logger.info("name=%s; email=%s; phone=%s; ssn=%s; password=%s; ip=%s; last_login=%s; user_agent=%s;",
+                    row['name'], row['email'], row['phone'], row['ssn'], row['password'], row['ip'], row['last_login'], row['user_agent'])
+    cursor.close()
+    db.close()
+
+if __name__ == "__main__":
+    main()
