@@ -16,7 +16,7 @@ class Auth:
         :param path: string path to be checked
         :param excluded_paths: list of string paths that
         are excluded from authentication
-        :return: False
+        :return: False or True
         """
         if path is None:
             return True
@@ -24,7 +24,7 @@ class Auth:
             return True
 
         if not path.endswith('/'):
-            path + = '/'
+            path += '/'
 
         for excluded_path in excluded_paths:
             if excluded_path.endswith('/') and excluded_path == path:
