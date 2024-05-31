@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-the app file
+module file
 """
 from os import getenv
 from api.v1.views import app_views
@@ -26,29 +26,37 @@ if AUTH_TYPE == 'basic_auth':
     auth = BasicAuth()
 
 
+if AUTH_TYPE == 'session_auth':
+    from api.v1.auth.session_auth import SessionAuth
+    auth = SessionAuth()
+
+
 @app.before_request
-def checker():
+def bef_req():
     """
-    doc doc doc
+   before reqs handler
     """
     if auth is None:
         pass
-    req_auth = auth.require_auth(request.path,
-                                 ['/api/v1/status/',
-                                  '/api/v1/unauthorized/',
-                                  '/api/v1/forbidden/'])
-    if req_auth is True:
-        pass
-
-    if auth.authorization_header(request) is None:
-        abort(401, description="Unauthorized")
-    if auth.current_user(request) is None:
-        abort(403, description="Forbidden")
+    else:
+        setattr(request, "current_user", auth.current_user(request))
+        excluded = [
+            '/api/v1/status/',
+            '/api/v1/unauthorized/',
+            '/api/v1/forbidden/',
+            '/api/v1/auth_session/login/'
+        ]
+        if auth.require_auth(request.path, excluded):
+            cookie = auth.session_cookie(request)
+            if auth.authorization_header(request) is None and cookie is None:
+                abort(401, description="Unauthorized")
+            if auth.current_user(request) is None:
+                abort(403, description="Forbidden")
 
 
 @app.errorhandler(404)
 def not_found(error) -> str:
-    """ handeling not found
+    """ Not found handler
     """
     return jsonify({"error": "Not found"}), 404
 
@@ -61,8 +69,7 @@ def unauthorized(error) -> str:
 
 @app.errorhandler(403)
 def not_allowed(error) -> str:
-    """_not_allowed handler
-    """
+    """Forbidden handler"""
     return jsonify({"error": "Forbidden"}), 403
 
 
